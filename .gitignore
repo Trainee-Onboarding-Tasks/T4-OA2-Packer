@@ -1,0 +1,7 @@
+packer.pkrvars.hcl
+
+**/*.tfstate
+
+.idea/
+
+*.pem*

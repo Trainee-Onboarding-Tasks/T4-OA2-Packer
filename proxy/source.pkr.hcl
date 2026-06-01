@@ -2,7 +2,6 @@
 source "amazon-ebs" "proxy_server_ubuntu" {
   ami_description = "Minimal Ubuntu Image for Proxy Server"
   ami_name        = "servers-ubuntu-{{timestamp}}"
-  profile         = var.aws_profile
   instance_type   = var.instance_type
   region          = var.region
 

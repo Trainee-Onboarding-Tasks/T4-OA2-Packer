@@ -1,20 +1,13 @@
 
-variable "aws_profile" {
-  description = "AWS CLI profile used for authentication"
+variable "region" {
+  description = "AWS region where AMI will be created"
   type        = string
-  default     = "default"
+  default     = "us-east-1"
 }
 
 
 variable "instance_type" {
-  description = "EC2 instance type to be used for the deployment"
+  description = "EC2 instance type used for building the AMI"
   type        = string
-  default     = "t3.micro"
-}
-
-
-variable "region" {
-  description = "AWS region where resources will be deployed"
-  type        = string
-  default     = "us-east-1"
+  default     = "t3.medium"
 }
