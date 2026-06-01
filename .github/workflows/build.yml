@@ -1,0 +1,51 @@
+name: "AMI Build (Packer)"
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "proxy/**" ]
+
+  pull_request:
+    branches: [ "main" ]
+    paths: [ "proxy/**" ]
+
+permissions:
+  id-token: write 
+  contents: read  
+
+
+jobs:
+
+  build:
+
+    name: "Packer: Init & Build"
+    if: github.event_name == 'pull_request'
+
+    runs-on: ubuntu-latest
+    environment: T4-build
+
+    defaults:
+      run:
+        working-directory: ./proxy
+
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@v4
+
+      - name: "Setup Packer"
+        uses: hashicorp/setup-packer@v3
+
+      - name: "AWS Auth (OIDC)"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::971778147356:role/GitHubActionsTerraformRole
+          aws-region: us-east-1
+
+      - name: "Packer: Init"
+        run: packer init .
+
+      - name: "Packer: Validate"
+        run: packer validate .
+
+      - name: "Packer: Build"
+        run: packer build .

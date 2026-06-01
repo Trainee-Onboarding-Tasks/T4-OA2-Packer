@@ -8,11 +8,20 @@ build {
 
 
   provisioner "shell" {
-    script = "scripts/base_setup.sh"
+    script          = "scripts/base_setup.sh"
+    execute_command = "sudo -E bash '{{ .Path }}'"
   }
 
   provisioner "shell" {
-    script = "scripts/install_docker.sh"
+    script          = "scripts/install_docker.sh"
     execute_command = "sudo -E bash '{{ .Path }}'"
+  }
+
+  provisioner "shell" {
+    script           = "scripts/start_services.sh"
+    execute_command  = "sudo -E bash '{{ .Path }}'"
+    environment_vars = [
+      "AWS_REGION=${var.region}" 
+    ]
   }
 }
