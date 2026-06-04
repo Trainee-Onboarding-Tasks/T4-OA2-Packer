@@ -17,6 +17,7 @@ This repository is designed to build multiple specialized Amazon Machine Images 
 Instead of a single monolithic server, this project follows a modular approach to create optimized images for different roles in the infrastructure:
 
 - **Proxy Server**: OAuth2-based authentication service environment.
+- **Ansible Server**: Ansible automation server used for configuration management and deployment orchestration.
 
 
 ---
@@ -25,8 +26,9 @@ Instead of a single monolithic server, this project follows a modular approach t
 The repository is organized into directories, each containing its own Packer templates, scripts, and configurations:
 ```text
 .
-├── proxy/        # AMI for Oauth2 and Keyclock server
-```
+├── proxy/          # AMI for Oauth2 and Keyclock server
+├── ansible/        # AMI for separate Ansible server
+``` 
 
 
 # Setup & Run
@@ -39,7 +41,7 @@ To build a specific AMI from your local machine, ensure you have the required cr
     *   HashiCorp Packer is installed
 
 2.  **Configuration**:
-    In target folder in file `variables.pkr.hcl` configure variables:
+    In each target folder (`proxy/` or `ansible/`), configure variables in `variables.pkr.hcl`:
 
     ```bash
     variable "region" {
@@ -59,7 +61,7 @@ To build a specific AMI from your local machine, ensure you have the required cr
 
 3.  **Build**:
     ```bash
-    cd <target_directory>  # e.g., cd llm
+    cd <target_directory>  # e.g., cd proxy or ansible
     packer init .
     packer build .
     ```
@@ -86,9 +88,28 @@ arn:aws:iam::971778147356:role/GitHubActionsTerraformRole
 ```
 
 
-## Pull Request Validation
+### Pull Request Labels (Manual Build Control)
 
-When a Pull Request targeting the `main` branch contains changes in the `proxy/` directory, GitHub Actions automatically performs:
+This repository uses labels to control which AMI builds are executed in Pull Requests. Instead of automatically building everything, you explicitly choose what should be built.
+
+### Available Labels
+
+| Label | Description |
+| :--- | :--- |
+| `build:proxy` | Triggers build for the Proxy AMI only |
+| `build:ansible` | Triggers build for the Ansible AMI only |
+| `build:both` | Triggers build for both Proxy and Ansible AMIs |
+
+
+### Important
+- Labels must be added in the Pull Request before the workflow runs or during updates.
+- Removing a label will prevent the corresponding build from running on the next workflow execution.
+- Labels act as the source of truth for controlling AMI builds in PRs.
+
+
+### Pull Request Validation
+
+When a Pull Request targeting the `main` branch contains changes in the `proxy/` or `ansible` directories, GitHub Actions automatically performs:
 
 - Packer initialization (`packer init`)
 - Packer configuration validation (`packer validate`)
@@ -102,8 +123,7 @@ This allows AMI changes to be validated before merging.
 When changes are merged into the `main` branch, GitHub Actions automatically:
 
 - Authenticates to AWS using OIDC
-- Initializes Packer in the `proxy/` directory
-- Validates the AMI configuration
+- Initializes Packer in the affected directory
 - Builds the AMI
 
 The build is executed using:
@@ -117,7 +137,12 @@ packer build .
 
 The workflow runs automatically when:
 
-- A Pull Request modifies files inside the `proxy/` directory
-- Changes are pushed to the main branch affecting files inside the `proxy/` directory
+- A Pull Request modifies files inside:
+    - `proxy/`
+    - `ansible/`
+
+- Changes are merged into main affecting:
+    - `proxy`
+    - `ansible`
 
 ---

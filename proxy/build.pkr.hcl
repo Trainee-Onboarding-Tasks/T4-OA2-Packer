@@ -1,6 +1,6 @@
 
 build {
-  name = "servers-ami"
+  name = "proxy-server-ami"
 
   sources = [
     "source.amazon-ebs.proxy_server_ubuntu"

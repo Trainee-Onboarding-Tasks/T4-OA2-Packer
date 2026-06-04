@@ -1,51 +1,57 @@
 name: "AMI Build (Packer)"
 
 on:
-  push:
-    branches: [ "main" ]
-    paths: [ "proxy/**" ]
-
   pull_request:
-    branches: [ "main" ]
-    paths: [ "proxy/**" ]
+    types: [opened, synchronize, labeled, unlabeled]
 
 permissions:
-  id-token: write 
-  contents: read  
-
+  id-token: write
+  contents: read
+  pull-requests: read
 
 jobs:
-
-  build:
-
-    name: "Packer: Init & Build"
-    if: github.event_name == 'pull_request'
-
+  build-proxy:
+    name: Build Proxy AMI
+    if: >
+      contains(github.event.pull_request.labels.*.name, 'build:proxy') ||
+      contains(github.event.pull_request.labels.*.name, 'build:both')
     runs-on: ubuntu-latest
     environment: T4-build
 
-    defaults:
-      run:
-        working-directory: ./proxy
-
     steps:
-      - name: "Checkout Code"
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-packer@v3
 
-      - name: "Setup Packer"
-        uses: hashicorp/setup-packer@v3
-
-      - name: "AWS Auth (OIDC)"
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::971778147356:role/GitHubActionsTerraformRole
           aws-region: us-east-1
 
-      - name: "Packer: Init"
-        run: packer init .
+      - name: Build Proxy AMI
+        run: |
+          cd proxy
+          packer init .
+          packer build .
 
-      - name: "Packer: Validate"
-        run: packer validate .
+  build-ansible:
+    name: Build Ansible AMI
+    if: >
+      contains(github.event.pull_request.labels.*.name, 'build:ansible') ||
+      contains(github.event.pull_request.labels.*.name, 'build:both')
+    runs-on: ubuntu-latest
+    environment: T4-build
 
-      - name: "Packer: Build"
-        run: packer build .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-packer@v3
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::971778147356:role/GitHubActionsTerraformRole
+          aws-region: us-east-1
+
+      - name: Build Ansible AMI
+        run: |
+          cd ansible
+          packer init .
+          packer build .
